@@ -4,6 +4,7 @@ import { getUser } from "../services/users/getUser";
 import { createUser } from "../services/users/createUser";
 import { deleteUser } from "../services/users/deleteUser";
 import { updateUser } from "../services/users/updateUser";
+import { z } from "zod";
 
 const routerUser = Router();
 
@@ -20,7 +21,17 @@ routerUser.get('/:idUser', async (req, res) => {
 });
 
 routerUser.post('/', async (req, res) => {
+    const userSchema = z.object({
+        name: z.string().min(2).max(80),
+        email: z.string().email()
+    })
+
     const {name, email} = req.body;
+    const validation = userSchema.safeParse({name, email});
+    if(!validation.success){
+        res.status(400).json({error: "Erro na validação dos dados."});
+        return;
+    }
     const user = await createUser(name, email);
     if(user) res.status(201).json({sucess: "Usuário criado com sucesso!"})
 });
